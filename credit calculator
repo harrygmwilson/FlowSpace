@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>FlowSpace Credit Calculator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: Arial; background:#f5f5f5; padding:40px; }
+    .card { background:white; padding:30px; border-radius:16px; max-width:600px; margin:auto; }
+    input, select { width:100%; padding:10px; margin-top:6px; margin-bottom:16px; }
+    button { padding:10px 16px; background:black; color:white; border:none; border-radius:8px; cursor:pointer; }
+    .result { background:#fafafa; padding:16px; border-radius:12px; margin-top:20px; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h2>FlowSpace Credit Calculator</h2>
+
+  <label>Team size</label>
+  <input type="number" id="team" value="10">
+
+  <label>Desk days per week per person</label>
+  <input type="number" id="days" value="2">
+
+  <label>Desk style</label>
+  <select id="style">
+    <option value="typical">Typical mix</option>
+    <option value="mostly_full">Mostly full-day</option>
+    <option value="mostly_6">Mostly 6-hour</option>
+    <option value="mostly_4">Mostly 4-hour</option>
+  </select>
+
+  <label>Meeting attendees</label>
+  <input type="number" id="attendees" value="4">
+
+  <label>Meeting hours per month</label>
+  <input type="number" id="hours" value="10">
+
+  <label>Day office people</label>
+  <input type="number" id="office_people" value="2">
+
+  <label>Day office days per month</label>
+  <input type="number" id="office_days" value="2">
+
+  <button onclick="calculate()">Calculate</button>
+
+  <div class="result" id="results" style="display:none;"></div>
+</div>
+
+<script>
+function calculate() {
+  const PRICE = 2.5;
+  const VAT = 0.2;
+  const WEEKS = 4.33;
+  const FULL = 18;
+  const SIX = Math.round(FULL * 0.75);
+  const FOUR = Math.round(FULL * 0.6);
+  const MEETING = 5;
+  const DAYOFFICE = 20;
+  const BUFFER = 0.1;
+  const ROUND = 10;
+
+  let team = Number(document.getElementById("team").value);
+  let days = Number(document.getElementById("days").value);
+  let style = document.getElementById("style").value;
+  let attendees = Number(document.getElementById("attendees").value);
+  let hours = Number(document.getElementById("hours").value);
+  let officePeople = Number(document.getElementById("office_people").value);
+  let officeDays = Number(document.getElementById("office_days").value);
+
+  let mix = { full:0.5, six:0.3, four:0.2 };
+
+  if(style==="mostly_full") mix = { full:0.8, six:0.1, four:0.1 };
+  if(style==="mostly_6") mix = { full:0.2, six:0.7, four:0.1 };
+  if(style==="mostly_4") mix = { full:0.2, six:0.1, four:0.7 };
+
+  let deskDays = team * days * WEEKS;
+
+  let deskCredits = deskDays *
+    (mix.full * FULL + mix.six * SIX + mix.four * FOUR);
+
+  let meetingCredits = attendees * hours * MEETING;
+  let officeCredits = officePeople * officeDays * DAYOFFICE;
+
+  let totalCredits = deskCredits + meetingCredits + officeCredits;
+  let buffered = totalCredits * (1 + BUFFER);
+  let rounded = Math.ceil(buffered / ROUND) * ROUND;
+
+  let exVat = rounded * PRICE;
+  let vat = exVat * VAT;
+  let incVat = exVat + vat;
+  let perPerson = team > 0 ? incVat / team : 0;
+
+  document.getElementById("results").style.display = "block";
+  document.getElementById("results").innerHTML =
+    "<b>Recommended credits:</b> " + rounded + "<br><br>" +
+    "<b>Cost ex VAT:</b> £" + exVat.toFixed(2) + "<br>" +
+    "<b>VAT:</b> £" + vat.toFixed(2) + "<br>" +
+    "<b>Total inc VAT:</b> £" + incVat.toFixed(2) + "<br><br>" +
+    "<b>Cost per person:</b> £" + perPerson.toFixed(2);
+}
+</script>
+
+</body>
+</html>
